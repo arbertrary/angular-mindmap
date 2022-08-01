@@ -1,1 +1,105 @@
-<p>mindmap works!</p>
+<button mat-stroked-button color="primary" class="button" (click)="center$.next(true)">Center</button>
+
+<mat-drawer-container class="example-container">
+    <mat-drawer-content>
+        <div class="mindMap">
+            <ngx-graph #graph [links]="links" [nodes]="nodes" [clusters]="clusters" [draggingEnabled]="draggingEnabled"
+                layout="dagreCluster" [center$]="center$" [autoZoom]="true" [showMiniMap]="true"
+                [layoutSettings]="layoutSettings">
+                <!-- <ng-template #defsTemplate>
+                    <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4"
+                        orient="auto">
+                        <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+                    </svg:marker>
+                </ng-template> -->
+
+                <ng-template #clusterTemplate let-cluster>
+                    <svg:g class="node cluster">
+                        <svg:rect rx="5" ry="5" [attr.width]="cluster.dimension.width"
+                            [attr.height]="cluster.dimension.height" [attr.fill]="cluster.data.color" />
+                        <svg:foreignObject width="150" height="100">
+                            <div class="cardContainer">
+                                <label class="clusterName" (click)="handleLeftClick($event, cluster)">{{ cluster.label
+                                    }}</label>
+                            </div>
+                        </svg:foreignObject>
+                    </svg:g>
+                </ng-template>
+
+                <ng-template #nodeTemplate let-node>
+                    <!-- <svg:g class="node" (mouseup)="onNodeMouseUp($event, node)" -->
+                    <!-- <svg:g class="node" (contextmenu)="handleRightClick($event, {content: 'Node ' + node.label})" -->
+                    <svg:g class="node" (click)="handleLeftClick($event, node)" style="cursor:pointer" width="150"
+                        height="100">
+                        <svg:rect [attr.width]="node.dimension.width" [attr.height]="node.dimension.height"
+                            [attr.fill]="node.data.color" [attr.stroke]="node.data.stroke" />
+                        <svg:foreignObject id="{{'container-' + node.id}}" width="150" height="100">
+                            <div class="cardContainer">
+                                <label class="nodeName">{{ node.label
+                                    }}</label>
+                            </div>
+                        </svg:foreignObject>
+                        <!-- <svg:text alignment-baseline="central" [attr.x]="10" [attr.y]="node.dimension.height / 2">
+                            {{node.label}}
+                        </svg:text> -->
+                        <svg:circle #labelMenuTrigger class="drag-circle" id="{{'circ-' + node.id}}"
+                            [attr.cx]="node.dimension.width" [attr.cy]="node.dimension.height / 2" [attr.r]="8"
+                            fill="gray" ngx-tooltip tooltipTitle="New Action" tooltipPlacement="right"
+                            (mousedown)="onNodeCircleMouseDown($event, node)" [matMenuTriggerFor]="labelMenu">
+                        </svg:circle>
+                    </svg:g>
+                </ng-template>
+
+                <ng-template #linkTemplate let-link>
+                    <svg:g class="edge" (click)="handleLeftClick($event,link)">
+                        <svg:path class="line" stroke-width="4" marker-end="url(#arrow)"></svg:path>
+                        <svg:text class="edge-label" text-anchor="middle">
+                            <textPath class="text-path" [attr.href]="'#' + link.id"
+                                [style.dominant-baseline]="link.dominantBaseline" startOffset="50%">
+                                {{ link.label }}
+                            </textPath>
+                        </svg:text>
+                    </svg:g>
+                    <!-- <svg:g class="linkMidpoint" *ngIf="link.midPoint"
+            [attr.transform]="'translate(' + link.midPoint.x + ',' + link.midPoint.y + ')'">
+            <ellipse rx="30" ry="10" />
+            <svg:text alignment-baseline="central">{{ link.data.linkText }}</svg:text>
+        </svg:g> -->
+                </ng-template>
+                <!-- Dragging line -->
+                <svg:line class="line drag-line" *ngIf="draggingNode" [attr.x1]="startingDragPosition.x"
+                    [attr.y1]="startingDragPosition.y" [attr.x2]="currentDragPosition.x"
+                    [attr.y2]="currentDragPosition.y" marker-end="url(#arrow)" />
+
+            </ngx-graph>
+
+            <!-- a hidden div is created to set the position of appearance of the menu-->
+            <div #rightMenuTrigger style="visibility: hidden;" [style.left.px]="menuTopLeftPosition.x"
+                [style.top.px]="menuTopLeftPosition.y" [matMenuTriggerFor]="rightMenu"></div>
+
+            <!-- standard material menu -->
+            <mat-menu #rightMenu="matMenu">
+                <ng-template matMenuContent let-item="item">
+                    <!-- <button mat-menu-item>Clicked {{item.content}}</button> -->
+                    <!-- <button mat-menu-item>Fixed menu</button> -->
+                    <button (click)="placeNode()" mat-menu-item>Add Node</button>
+                    <button (click)="linkNodes()" mat-menu-item>Link Two Random Nodes</button>
+                    <button (click)="createCluster()" mat-menu-item>Create Cluster from selected nodes</button>
+                </ng-template>
+            </mat-menu>
+
+            <!-- This menu causes the renaming of the given graph component from which it was triggered -->
+            <mat-menu #labelMenu="matMenu">
+                <ng-template matMenuContent let-item="item">
+                    <form #labelForm="ngForm" (ngSubmit)="renameLabel(labelForm.value.labelname, item)">
+                        <!-- stopPropagation so that mat-menu works with an inputfield. otherwise when clicking inside the input, the mat-menu would close -->
+                        <mat-form-field appearance="fill" (click)="$event.stopPropagation()">
+                            <mat-label>Add or Rename Label</mat-label>
+                            <input matInput #nameInput type="text" name="labelname" ngModel>
+                        </mat-form-field>
+                    </form>
+                </ng-template>
+            </mat-menu>
+        </div>
+    </mat-drawer-content>
+</mat-drawer-container>
