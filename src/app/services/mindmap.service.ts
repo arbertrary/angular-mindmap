@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Layout, Edge, Node, ClusterNode } from '@swimlane/ngx-graph';
+import { demoClusters, demoLinks, demoNodes } from 'src/assets/demo-mind-map';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MindmapService {
-  // links: Edge[] = links;
-  // nodes: Node[] = nodes;
-  // clusters: ClusterNode[] = clusters;
-  links: Edge[] = [];
-  nodes: Node[] = [];
-  clusters: ClusterNode[] = [];
+  links: Edge[] = demoLinks;
+  nodes: Node[] = demoNodes;
+  clusters: ClusterNode[] = demoClusters;
 
   /**
    * Nodes that have been selected using Ctrl+Left Click

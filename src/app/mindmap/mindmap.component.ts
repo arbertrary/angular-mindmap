@@ -102,6 +102,8 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    // this.center$.next(true);
+
     const panningRect = document.getElementsByClassName("panning-rect")[0];
     console.log(panningRect);
     panningRect.addEventListener('contextmenu', (event) => {
@@ -218,6 +220,15 @@ export class MindmapComponent implements OnInit, AfterViewInit {
     } else {
       console.log("uhm");
     }
+  }
+
+  /**
+   * Delete the current Mind Map contents and start new
+   */
+  clearMindMap() {
+    this.mindMapService.nodes = [];
+    this.mindMapService.links = [];
+    this.mindMapService.clusters = [];
   }
 
   /**

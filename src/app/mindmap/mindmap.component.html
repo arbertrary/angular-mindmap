@@ -1,9 +1,11 @@
 <h2>Mind Map</h2>
 
 <!-- <button mat-stroked-button color="primary" class="button" (click)="center$.next(true)">Center</button> -->
-<!-- <button (click)="sidebar.toggle()">Open Sidebar</button> -->
+<button title="Toggle Sidebar Menu" (click)="sidebar.toggle()"><span class="material-icons">
+        menu
+    </span></button>
 <mat-drawer-container class="example-container">
-    <mat-drawer #sidebar mode="side" opened class="sidebar">
+    <mat-drawer #sidebar mode="push" opened class="sidebar">
         <!-- <h2>Configuration</h2> -->
         <mat-form-field>
             <mat-select placeholder="Line Curve Interpolation" [ngModel]="curveType"
@@ -18,10 +20,20 @@
         <mat-checkbox [(ngModel)]="zoomEnabled" name="zoomEnabled">Enable Zoom</mat-checkbox>
         <mat-checkbox [(ngModel)]="miniMapVisible" name="miniMapVisible">Show Mini Map</mat-checkbox>
         <button (click)="center$.next(true)">Center</button>
+
         <br>
-        <button class="material-icons" (click)="downloadMindMap()">save</button>
+        <button title="Save Mind Map Config" aria-label="saveButton" (click)="downloadMindMap()"><span
+                class="material-icons">save</span></button>
         <input style="display: none" type="file" (change)="uploadMindMap($event)" #fileInput>
-        <button class="material-icons" (click)="fileInput.click()">file_upload</button>
+        <button title="Load Mind Map Config" aria-label="loadButton" (click)="fileInput.click()">
+            <span class="material-icons">file_upload</span></button>
+        <button title="Delete current MindMap" (click)="clearMindMap()"><span
+                class="material-icons">delete</span></button>
+        <hr>
+        <h3>Tips</h3>
+        <ul>
+            <li>Right click on the canvas to lorem ipsum dolor sit amet</li>
+        </ul>
     </mat-drawer>
 
     <mat-drawer-content>
@@ -43,7 +55,7 @@
                             [attr.width]="cluster.dimension.width" [attr.height]="cluster.dimension.height"
                             [attr.fill]="cluster.data.color" />
                         <svg:foreignObject width="150" height="100">
-                            <div class="cardContainer">
+                            <div title="Click to rename" class="cardContainer">
                                 <label class="clusterName" (click)="handleLeftClick($event, cluster)">{{ cluster.label
                                     }}</label>
                             </div>
@@ -63,7 +75,7 @@
                             [attr.stroke]="node.data.stroke" />
                         <svg:foreignObject id="{{'container-' + node.id}}" [attr.width]="node.dimension.width"
                             [attr.height]="node.dimension.height">
-                            <div class="cardContainer">
+                            <div title="Click to rename" class="cardContainer">
                                 <label class="nodeName">{{ node.label
                                     }}</label>
                                 <!-- <span>X</span> -->
@@ -72,6 +84,8 @@
                         <!-- <svg:text alignment-baseline="central" [attr.x]="10" [attr.y]="node.dimension.height / 2">
                             {{node.label}}
                         </svg:text> -->
+                        <title>Click to link to same node. Hold mouse button down and drag to other circle to
+                            link to another node.</title>
                         <svg:circle #labelMenuTrigger class="drag-circle" id="{{'circ-' + node.id}}"
                             [attr.cx]="node.dimension.width" [attr.cy]="node.dimension.height / 2" [attr.r]="8"
                             fill="gray" ngx-tooltip tooltipTitle="New Action" tooltipPlacement="right"
@@ -110,7 +124,7 @@
                 [style.top.px]="menuTopLeftPosition.y" [matMenuTriggerFor]="graphMenu"></div>
 
             <!-- The "global" context menu for the graph -->
-            <mat-menu #graphMenu="matMenu">
+            <mat-menu #graphMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-item="item">
                     <button (click)="this.mindMapService.addNode()" mat-menu-item>Add new basic Node</button>
                     <button (click)="this.mindMapService.addNode(NodeHierarchy.Medium)" mat-menu-item>Add new Medium
@@ -121,7 +135,7 @@
             </mat-menu>
 
             <!-- The context menu for a node -->
-            <mat-menu #nodeMenu="matMenu">
+            <mat-menu #nodeMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-node="node">
                     <button (click)="this.mindMapService.openDetails(node)" mat-menu-item>Show Details</button>
                     <button (click)="this.mindMapService.removeElement(node)" mat-menu-item>Remove Node</button>
@@ -133,7 +147,7 @@
             </mat-menu>
 
             <!-- The context menu for a cluster -->
-            <mat-menu #clusterMenu="matMenu">
+            <mat-menu #clusterMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-cluster="cluster">
                     <button (click)="this.mindMapService.removeElement(cluster)" mat-menu-item>Remove Cluster</button>
                     <button (click)="this.mindMapService.createCluster(cluster)" mat-menu-item>Add selected nodes to
@@ -142,7 +156,7 @@
             </mat-menu>
 
             <!-- The context menu for an edge -->
-            <mat-menu #edgeMenu="matMenu">
+            <mat-menu #edgeMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-edge="edge">
                     <button (click)="this.mindMapService.removeElement(edge)" mat-menu-item>Remove Edge</button>
                     <!-- <button (click)="this.mindMapService.createCluster()" mat-menu-item>Add selected nodes to
@@ -151,7 +165,7 @@
             </mat-menu>
 
             <!-- This menu causes the renaming of the given graph component from which it was triggered -->
-            <mat-menu #labelMenu="matMenu">
+            <mat-menu #labelMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-item="item">
                     <form #labelForm="ngForm" (ngSubmit)="renameLabel(labelForm.value.labelName, item)">
                         <!-- stopPropagation so that mat-menu works with an inputfield. otherwise when clicking inside the input, the mat-menu would close -->
