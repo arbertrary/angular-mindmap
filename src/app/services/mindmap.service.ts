@@ -20,27 +20,7 @@ export class MindmapService {
   nodeWidth = 100;
   nodeColor = "#D3D3D3";
 
-  /**
-   * The MindMapService constructor. CUrrently sets the dimensions of all nodes to the hardcoded width and height
-   * @param eventService 
-   */
-  constructor() {
-    this.nodes.map((n) => {
-      n.dimension = {
-        width: this.nodeWidth,
-        height: this.nodeHeight
-      };
-      if (n.data) {
-        n.data.customColor = this.nodeColor;
-        n.data.level = NodeHierarchy.Basic
-      } else {
-        n.data = {
-          customColor: this.nodeColor,
-          level: NodeHierarchy.Basic
-        }
-      };
-    });
-  }
+  constructor() { }
 
   /**
    * Loads a MindMap to this service
