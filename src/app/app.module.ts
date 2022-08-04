@@ -15,6 +15,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatCheckboxModule } from "@angular/material/checkbox"
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
     BrowserModule,
     AppRoutingModule,
     FormsModule,
+    MatCheckboxModule,
     MatDialogModule,
     MatMenuModule,
     MatInputModule,

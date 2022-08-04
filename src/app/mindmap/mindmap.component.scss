@@ -1,5 +1,11 @@
+:host ::ng-deep {
+    .ngx-charts {
+        background-color: aliceblue;
+    }
+}
+
 .sidebar {
-    background: #efefef;
+    // background: #efefef;
     padding: 10px;
 }
 
@@ -15,12 +21,6 @@ mat-checkbox {
     overflow: hidden;
 }
 
-:host ::ng-deep {
-    .ngx-charts {
-        background-color: aliceblue;
-    }
-}
-
 .drag-line {
     stroke-width: 2px;
     stroke: #000;
@@ -34,4 +34,9 @@ mat-checkbox {
 label {
     border: solid;
     cursor: pointer;
+}
+
+.cardContainer {
+    display: flex;
+    justify-content: space-between;
 }
