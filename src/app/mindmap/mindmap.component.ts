@@ -52,6 +52,7 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   // autoCenter: boolean = false;
   center$: Subject<boolean> = new Subject();
 
+  toggleColorPicker: boolean = false;
 
   // line interpolation
   curveType: string = "Bundle";
@@ -76,8 +77,6 @@ export class MindmapComponent implements OnInit, AfterViewInit {
     orientation: 'LR'
   };
 
-  nodeHeight = 100;
-  nodeWidth = 100;
 
   // https://marco.dev/angular-right-click-menu
   // Maybe use ngx-graph and create custom node and link functionality, custom context menu etc
@@ -204,8 +203,8 @@ export class MindmapComponent implements OnInit, AfterViewInit {
         element.data.stroke = "black";
       }
     } else if ((elementUnderPointer !== null
-      && (elementUnderPointer.classList.contains("nodeName")
-        || elementUnderPointer.classList.contains("clusterName")))
+      && (this.mindMapService.isCluster(element)
+        || this.mindMapService.isNode(element)))
       || this.mindMapService.isEdge(element)) {
 
       // Give the current element to the labelMenu to handle

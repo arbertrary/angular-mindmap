@@ -49,6 +49,15 @@ export class MindmapService {
   }
 
   /**
+ * Delete the current Mind Map contents and start new
+ */
+  clearMindMap() {
+    this.nodes = [];
+    this.links = [];
+    this.clusters = [];
+  }
+
+  /**
    * An intermediate function calling the openDetails function of eventService
    * @param node 
    */
@@ -147,7 +156,10 @@ export class MindmapService {
       const newCluster: ClusterNode = {
         id: id,
         label: 'Cluster ' + id,
-        childNodeIds: childNodes
+        childNodeIds: childNodes,
+        data: {
+          customColor: this.nodeColor
+        }
       }
 
       this.clusters.push(newCluster);
