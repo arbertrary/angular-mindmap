@@ -179,30 +179,16 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Handle primary mouse click on a graph element.
-   * If Ctrl is pressed, select this node and add it to the selectedNodes list
-   * If the graph element is an edge or a Node/ClusterNode label open the rename Menu
-   * If Ctrl is not pressed and target is a Node, open the details of that node (if it's a event/commit node)
-   * @param event 
-   * @param node 
-   */
+  * Handle primary mouse click on a graph element.
+  * If Ctrl is pressed, select this node and add it to the selectedNodes list
+  * If the graph element is an edge or a Node/ClusterNode label open the rename Menu
+  * If Ctrl is not pressed and target is a Node, open the details of that node (if it's a event/commit node)
+  * @param event 
+  * @param node 
+  */
   handleLeftClick(event: any, element: Node | ClusterNode | Edge) {
     const elementUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
-
-    if (event.ctrlKey && this.mindMapService.isNode(element)) {
-      // If node is in selectedNodes already when ctrl-clicking remove it from there
-      if (element.data.stroke === "black") {
-        var index = this.mindMapService.nodes.findIndex(x => x.id === element.id);
-        console.log(index);
-        this.mindMapService.selectedNodes.splice(index, 1);
-        element.data.stroke = "none";
-        console.log(this.mindMapService.selectedNodes);
-      } else {
-        this.mindMapService.selectedNodes.push(element);
-        console.log(this.mindMapService.selectedNodes);
-        element.data.stroke = "black";
-      }
-    } else if ((elementUnderPointer !== null
+    if ((elementUnderPointer !== null
       && (this.mindMapService.isCluster(element)
         || this.mindMapService.isNode(element)))
       || this.mindMapService.isEdge(element)) {
@@ -210,7 +196,6 @@ export class MindmapComponent implements OnInit, AfterViewInit {
       // Give the current element to the labelMenu to handle
       this.labelMenu.menuData = { item: element };
       this.labelMenu.openMenu();
-
     } else if (this.mindMapService.isNode(element)) {
       // TODO: Unfortunately when dragging is enabled, dragging triggers opening the details. This is unwanted
       // this.mindMapService.openDetails(element);
@@ -218,6 +203,26 @@ export class MindmapComponent implements OnInit, AfterViewInit {
       // TODO: open details
     } else {
       console.log("uhm");
+    }
+  }
+
+  /**
+   * Selecting and De-selecting nodes using Ctrl+click
+   * @param event 
+   * @param element 
+   */
+  handleCtrlClick(event: any, element: Node) {
+    if (event.ctrlKey && this.mindMapService.isNode(element)) {
+      // If node is in selectedNodes already when ctrl-clicking remove it from there
+      if (element.data.stroke === "black") {
+        var index = this.mindMapService.selectedNodes.findIndex(x => x.id === element.id);
+        this.mindMapService.selectedNodes.splice(index, 1);
+        element.data.stroke = "none";
+        console.log(this.mindMapService.selectedNodes);
+      } else {
+        this.mindMapService.selectedNodes.push(element);
+        element.data.stroke = "black";
+      }
     }
   }
 
