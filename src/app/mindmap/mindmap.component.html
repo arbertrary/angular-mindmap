@@ -1,11 +1,30 @@
 <h2>Mind Map</h2>
 
 <!-- <button mat-stroked-button color="primary" class="button" (click)="center$.next(true)">Center</button> -->
-<button title="Toggle Sidebar Menu" (click)="sidebar.toggle()"><span class="material-icons">
+<button title="Toggle Sidebar Menu" (click)="configSidebar.toggle()"><span class="material-icons">
         menu
     </span></button>
 <mat-drawer-container class="example-container">
-    <mat-drawer #sidebar mode="side" opened class="sidebar">
+    <mat-drawer #noteSidebar position="end" mode="side" opened class="sidebar">
+        <h3>Notes:</h3>
+        <form #noteForm="ngForm" (ngSubmit)="this.mindMapService.addMindMapNote(noteText.value)">
+            <mat-form-field appearance="fill">
+                <mat-label>Add a note</mat-label>
+                <textarea matInput #noteText type="text" placeholder="Note"></textarea>
+                <br>
+                <input type="submit" value="Add Note" class="submitButton">
+            </mat-form-field>
+        </form>
+        <div *ngFor="let n of this.mindMapService.mindMapNotes">
+            <span>{{n.date}}</span>
+            <br>
+            <span>{{n.note}}</span>
+            <hr>
+        </div>
+
+
+    </mat-drawer>
+    <mat-drawer #configSidebar position="start" mode="over" opened class="sidebar">
         <!-- <h2>Configuration</h2> -->
         <mat-form-field>
             <mat-select placeholder="Line Curve Interpolation" [ngModel]="curveType"
@@ -74,6 +93,8 @@
                         <svg:rect [attr.width]="node.dimension.width" [attr.height]="node.dimension.height"
                             [attr.fill]="node.data.customColor|| this.mindMapService.nodeColor"
                             [attr.stroke]="node.data.stroke" />
+                        <!-- The note text to this note shows on hover -->
+                        <title *ngIf="node.data.note">{{node.data.note}</title>
                         <svg:foreignObject id="{{'container-' + node.id}}" [attr.width]="node.dimension.width"
                             [attr.height]="node.dimension.height">
                             <div title="Click to rename" class="cardContainer">
@@ -137,9 +158,13 @@
             <mat-menu #nodeMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-node="node">
                     <button (click)="this.mindMapService.openDetails(node)" mat-menu-item>Show Details</button>
-                    <button (click)="this.mindMapService.removeElement(node)" mat-menu-item>Remove Node</button>
+                    <button (click)="this.mindMapService.removeElement(node)" mat-menu-item>Remove Node from Mind
+                        Map</button>
                     <button (click)="this.mindMapService.removeElement(node, true)" mat-menu-item>Remove all selected
                         Nodes</button>
+                    <button *ngIf="this.mindMapService.isInCluster(node)"
+                        (click)="this.mindMapService.removeFromCluster(node)" mat-menu-item>Remove Node from current
+                        cluster</button>
                     <button (click)="this.mindMapService.createCluster()" mat-menu-item>Create Cluster from selected
                         nodes</button>
                     <button (click)="$event.stopPropagation();toggleColorPicker=!toggleColorPicker" mat-menu-item>Select

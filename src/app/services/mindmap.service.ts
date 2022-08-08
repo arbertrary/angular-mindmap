@@ -9,6 +9,7 @@ export class MindmapService {
   links: Edge[] = demoLinks;
   nodes: Node[] = demoNodes;
   clusters: ClusterNode[] = demoClusters;
+  mindMapNotes: MindMapNote[] = [];
 
   /**
    * Nodes that have been selected using Ctrl+Left Click
@@ -30,9 +31,13 @@ export class MindmapService {
     if (mMap.clusters) {
       this.clusters = mMap.clusters;
     }
+    if (mMap.notes) {
+      this.mindMapNotes = mMap.notes;
+    }
 
     this.nodes = mMap.nodes;
     this.links = mMap.links;
+
   }
 
   /**
@@ -43,7 +48,8 @@ export class MindmapService {
     const mMap = {
       nodes: this.nodes,
       links: this.links,
-      clusters: this.clusters
+      clusters: this.clusters,
+      notes: this.mindMapNotes
     }
     return mMap;
   }
@@ -98,6 +104,17 @@ export class MindmapService {
     this.nodes = [...this.nodes];
   }
 
+  addMindMapNote(note: string) {
+    const date = new Date()
+    const dateString = date.toLocaleDateString() + " // " + date.toLocaleTimeString();
+    var newNote: MindMapNote = {
+      note: note,
+      date: dateString
+
+    }
+    this.mindMapNotes.push(newNote);
+  }
+
   /**
    * Removes the given element from the graph and updates the graph
    * @param element The graph element. Either a node, edge or cluster.
@@ -127,6 +144,18 @@ export class MindmapService {
       this.clusters = [...this.clusters];
     }
   }
+  /**
+ * 
+ * @param node 
+ */
+  removeFromCluster(node: Node) {
+    for (let c of this.clusters) {
+      if (c.childNodeIds) {
+        c.childNodeIds = c.childNodeIds.filter(n => (n !== node.id));
+      }
+    }
+    this.clusters = [...this.clusters];
+  }
 
   /**
    * If nodes have been selected using Ctrl+left click, create a cluster from these selected nodes
@@ -138,8 +167,8 @@ export class MindmapService {
       this.selectedNodes.forEach((n) => {
         cluster.childNodeIds?.push(n.id);
         n.data.stroke = "none";
-        this.selectedNodes = [];
-      })
+      });
+      this.selectedNodes = [];
       this.clusters = [...this.clusters];
     }
     else if (this.selectedNodes.length > 0) {
@@ -167,6 +196,20 @@ export class MindmapService {
     } else {
       alert("There are no nodes selected.");
     }
+  }
+
+  /**
+ * Check if given node is in any cluster currently
+ * @param node 
+ */
+  isInCluster(node: Node): boolean {
+    for (let c of this.clusters) {
+      // console.log(c.childNodeIds);
+      if (c.childNodeIds?.includes(node.id)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   isNode(n: any): n is Node {
@@ -198,7 +241,13 @@ export class MindmapService {
 export type MindMap = {
   nodes: Node[];
   links: Edge[];
-  clusters?: ClusterNode[]
+  clusters?: ClusterNode[];
+  notes?: MindMapNote[]
+}
+
+export type MindMapNote = {
+  date: string;
+  note: string
 }
 
 /**
