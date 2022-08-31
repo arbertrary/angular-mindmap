@@ -1,12 +1,13 @@
-:host ::ng-deep {
-    .ngx-charts {
-        background-color: aliceblue;
-    }
-}
+// :host ::ng-deep {
+//     .ngx-charts {
+//         background-color: aliceblue;
+//     }
+// }
 
 .sidebar {
     // background: #efefef;
     padding: 10px;
+    max-width: 15%;
 }
 
 mat-form-field,
@@ -23,12 +24,19 @@ mat-checkbox {
 
 .drag-line {
     stroke-width: 2px;
-    stroke: #000;
+    stroke: var(--text-color);
     stroke-dasharray: 4;
 }
 
 .edge {
     cursor: pointer;
+}
+
+.line.highlighted {
+    // stroke-width: 6px;
+    stroke: var(--text-color);
+    stroke-dasharray: 4;
+
 }
 
 label {

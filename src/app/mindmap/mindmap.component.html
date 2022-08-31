@@ -1,5 +1,5 @@
-<h2>Mind Map</h2>
-
+<!-- <h1>Mind Map</h1> -->
+<br>
 <!-- <button mat-stroked-button color="primary" class="button" (click)="center$.next(true)">Center</button> -->
 <button title="Toggle Sidebar Menu" (click)="configSidebar.toggle()"><span class="material-icons">
         menu
@@ -7,30 +7,63 @@
 <mat-drawer-container class="example-container">
     <mat-drawer #noteSidebar position="end" mode="side" opened class="sidebar">
         <h3>Notes:</h3>
-        <form #noteForm="ngForm" (ngSubmit)="this.mindMapService.addMindMapNote(noteText.value)">
+        <form #noteForm="ngForm" (ngSubmit)="this.mindMapService.addMindMapNote(noteText.value);noteText.value=''">
             <mat-form-field appearance="fill">
                 <mat-label>Add a note</mat-label>
-                <textarea matInput #noteText type="text" placeholder="Note"></textarea>
+                <textarea #noteText matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5"
+                    type="text" placeholder="Note"></textarea>
                 <br>
-                <input type="submit" value="Add Note" class="submitButton">
+                <button matSuffix type="submit">
+                    <span class="material-icons">mode_edit</span>
+                    <!-- <input type="submit" value="Add Note" class="submitButton"> -->
+                </button>
             </mat-form-field>
         </form>
-        <div *ngFor="let n of this.mindMapService.mindMapNotes">
-            <span>{{n.date}}</span>
+        <hr>
+        <div *ngFor="let n of this.mindMapService.mindMapNotes.slice().reverse()">
+            <mat-expansion-panel [expanded]="true">
+                <mat-expansion-panel-header>
+                    <mat-panel-title>
+                        {{n.date}}
+                        <span (click)="this.mindMapService.deleteMindMapNote(n)" class="material-icons">delete</span>
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-form-field appearance="fill">
+                    <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5"
+                        [(ngModel)]="n.note" value="{{n.note}}"></textarea>
+                </mat-form-field>
+            </mat-expansion-panel>
+            <!-- <span>{{n.date}}</span>
             <br>
-            <span>{{n.note}}</span>
+            <mat-form-field appearance="fill">
+                <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5"
+                    [(ngModel)]="n.note" value="{{n.note}}"></textarea>
+                <button matSuffix mat-icon-button title="Delete this note"
+                    (click)="this.mindMapService.deleteNote(n)"><span class="material-icons">delete</span></button>
+            </mat-form-field> -->
+
+            <!-- <span>{{n.note}}</span> -->
             <hr>
         </div>
 
 
     </mat-drawer>
-    <mat-drawer #configSidebar position="start" mode="over" opened class="sidebar">
+    <mat-drawer #configSidebar position="start" mode="side" opened class="sidebar">
         <!-- <h2>Configuration</h2> -->
         <mat-form-field>
-            <mat-select placeholder="Line Curve Interpolation" [ngModel]="curveType"
-                (ngModelChange)="setInterpolationType($event)" name="curve">
-                <mat-option *ngFor="let curveType of interpolationTypes" [value]="curveType">
+            <mat-select placeholder="Line Curve Interpolation" [ngModel]="this.mindMapService.curveType"
+                (ngModelChange)="this.mindMapService.setInterpolationType($event)" name="curve">
+                <mat-option *ngFor="let curveType of this.mindMapService.interpolationTypes" [value]="curveType">
                     {{curveType}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-select placeholder="Graph Direction" [ngModel]="this.mindMapService.orientationType"
+                (ngModelChange)="setOrientationType($event)" name="orientation">
+                <mat-option *ngFor="let orientationType of this.mindMapService.orientationTypes"
+                    [value]="orientationType[0]">
+                    {{orientationType[1]}}
                 </mat-option>
             </mat-select>
         </mat-form-field>
@@ -38,20 +71,38 @@
         <mat-checkbox [(ngModel)]="draggingEnabled" name="draggingEnabled">Enable Dragging</mat-checkbox>
         <mat-checkbox [(ngModel)]="zoomEnabled" name="zoomEnabled">Enable Zoom</mat-checkbox>
         <mat-checkbox [(ngModel)]="miniMapVisible" name="miniMapVisible">Show Mini Map</mat-checkbox>
-        <button (click)="center$.next(true)">Center</button>
-        <br>
+        <hr>
+        <button (click)="center$.next(true)" mat-menu-item>Center Mind Map</button>
+
+        <button (click)="this.mindMapService.addNode()" mat-menu-item>Add new basic Node</button>
+        <button (click)="this.mindMapService.addNode(NodeHierarchy.Medium)" mat-menu-item>Add new Medium
+            Node</button>
+        <button (click)="this.mindMapService.createCluster()" mat-menu-item>Create Cluster from selected
+            nodes</button>
 
         <button title="Save Mind Map Config" aria-label="saveButton" (click)="downloadMindMap()"><span
                 class="material-icons">save</span></button>
         <input style="display: none" type="file" (change)="uploadMindMap($event)" #fileInput>
         <button title="Load Mind Map Config" aria-label="loadButton" (click)="fileInput.click()">
             <span class="material-icons">file_upload</span></button>
-        <button title="Delete current MindMap" (click)="this.mindMapService.clearMindMap()"><span
+        <button title="Delete current Mind Map" (click)="this.mindMapService.clearMindMap()"><span
                 class="material-icons">delete</span></button>
+        <button title="Save current Mind Map as Image" (click)="getMindMapAsPng()"><span
+                class="material-icons">camera_alt</span></button>
         <hr>
         <h3>Tips</h3>
         <ul>
-            <li>Right click on the canvas to lorem ipsum dolor sit amet</li>
+            <li>This mind map consists of nodes, links/edges, and clusters</li>
+            <li>Right click on any node, cluster, link, or the background to open element-specific context menus</li>
+            <li>Left click on the rectangular text label on a node or cluster, or on a link to rename the element</li>
+            <li>Click on the gray circle next to a node, hold the mouse button down and drag the arrow to the circle of
+                another node you wish to connect with.</li>
+            <li>Hold the Ctrl key and left click on a node to select the node</li>
+        </ul>
+        <h3>Please note:</h3>
+        <ul>
+            <li>The scroll wheel on the mouse zooms the mind map. To scroll the page move the mouse to the sidebar or
+                use the scroll bar itself</li>
         </ul>
     </mat-drawer>
 
@@ -60,7 +111,7 @@
             <ngx-graph #graph [links]="this.mindMapService.links" [nodes]="this.mindMapService.nodes"
                 [clusters]="this.mindMapService.clusters" [draggingEnabled]="draggingEnabled" [enableZoom]="zoomEnabled"
                 layout="dagreCluster" [center$]="center$" [autoZoom]="true" [showMiniMap]="miniMapVisible"
-                [layoutSettings]="layoutSettings" [curve]="curve">
+                [layoutSettings]="this.mindMapService.layoutSettings" [curve]="this.mindMapService.curve">
                 <ng-template #defsTemplate>
                     <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4"
                         orient="auto">
@@ -94,7 +145,9 @@
                             [attr.fill]="node.data.customColor|| this.mindMapService.nodeColor"
                             [attr.stroke]="node.data.stroke" />
                         <!-- The note text to this note shows on hover -->
-                        <title *ngIf="node.data.note">{{node.data.note}</title>
+                        <title *ngIf='node.data.note'>
+                            {{node.data.note}}
+                        </title>
                         <svg:foreignObject id="{{'container-' + node.id}}" [attr.width]="node.dimension.width"
                             [attr.height]="node.dimension.height">
                             <div title="Click to rename" class="cardContainer">
@@ -118,8 +171,9 @@
                     <svg:g class="edge" (click)="handleLeftClick($event,link)"
                         (contextmenu)="handleRightClick($event, link)">
                         <div #edgeMenuTrigger [matMenuTriggerFor]="edgeMenu" style="visibility: hidden;"></div>
-                        <svg:path class="line" stroke-width="4" marker-end="url(#arrow)"></svg:path>
-                        <svg:text class="edge-label" text-anchor="middle">
+                        <svg:path class="line {{link.data?.class}}" stroke-width="4" marker-end="url(#arrow)">
+                        </svg:path>
+                        <svg:text class="edge-label" text-anchor="middle" [ngStyle]="getLinkStyle()">
                             <textPath class="text-path" [attr.href]="'#' + link.id"
                                 [style.dominant-baseline]="link.dominantBaseline" startOffset="50%">
                                 {{ link.label }}
@@ -157,7 +211,6 @@
             <!-- The context menu for a node -->
             <mat-menu #nodeMenu="matMenu" [overlapTrigger]="true">
                 <ng-template matMenuContent let-node="node">
-                    <button (click)="this.mindMapService.openDetails(node)" mat-menu-item>Show Details</button>
                     <button (click)="this.mindMapService.removeElement(node)" mat-menu-item>Remove Node from Mind
                         Map</button>
                     <button (click)="this.mindMapService.removeElement(node, true)" mat-menu-item>Remove all selected

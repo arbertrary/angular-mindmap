@@ -1,23 +1,24 @@
 import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
-import { MindMap, MindmapService, NodeHierarchy } from '../services/mindmap.service';
+
+import { MindmapService, NodeHierarchy } from '../services/mindmap.service';
 
 import { GraphComponent, NgxGraphModule, NodePosition } from '@swimlane/ngx-graph';
 
 import { Layout, Edge, Node, ClusterNode } from '@swimlane/ngx-graph';
 
 import { MatMenuTrigger } from "@angular/material/menu";
-
 import { Subject } from 'rxjs';
-import * as shape from 'd3-shape';
 
+import { MindMap } from "src";
 
+import * as saveAsPng from "save-svg-as-png";
 
 @Component({
   selector: 'app-mindmap',
   templateUrl: './mindmap.component.html',
   styleUrls: ['./mindmap.component.scss']
 })
-export class MindmapComponent implements OnInit, AfterViewInit {
+export class MindmapComponent implements OnInit {
 
   // we create an object that contains coordinates 
   menuTopLeftPosition = { x: '0', y: '0' }
@@ -41,7 +42,7 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   // selectedNodes: Node[] = [];
   // draggingEnabled: boolean = false;
   // panningEnabled: boolean = true;
-  zoomEnabled: boolean = false;
+  zoomEnabled: boolean = true;
 
   // zoomSpeed: number = 0.1;
   // minZoomLevel: number = 0.1;
@@ -53,30 +54,6 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   center$: Subject<boolean> = new Subject();
 
   toggleColorPicker: boolean = false;
-
-  // line interpolation
-  curveType: string = "Bundle";
-  curve: any = shape.curveLinear;
-  interpolationTypes = [
-    'Bundle',
-    'Cardinal',
-    'Catmull Rom',
-    'Linear',
-    'Monotone X',
-    'Monotone Y',
-    'Natural',
-    'Step',
-    'Step After',
-    'Step Before'
-  ];
-
-
-  public layoutSettings = {
-    // TB = Top-bottom
-    // LR = Left-right
-    orientation: 'LR'
-  };
-
 
   // https://marco.dev/angular-right-click-menu
   // Maybe use ngx-graph and create custom node and link functionality, custom context menu etc
@@ -97,53 +74,14 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   constructor(public mindMapService: MindmapService) { }
 
   ngOnInit(): void {
-    this.setInterpolationType(this.curveType);
+    this.mindMapService.setInterpolationType(this.mindMapService.curveType);
   }
 
-  ngAfterViewInit(): void {
-    // this.center$.next(true);
+  setOrientationType(oType: string) {
+    this.mindMapService.setOrientation(oType);
+    this.graphEl.update();
+  }
 
-    const panningRect = document.getElementsByClassName("panning-rect")[0];
-    console.log(panningRect);
-    panningRect.addEventListener('contextmenu', (event) => {
-      event.preventDefault();
-      console.log("right clicked on canvas");
-      this.graphMenu.openMenu();
-    });
-  }
-  setInterpolationType(curveType: string) {
-    this.curveType = curveType;
-    if (curveType === 'Bundle') {
-      this.curve = shape.curveBundle.beta(1);
-    }
-    if (curveType === 'Cardinal') {
-      this.curve = shape.curveCardinal;
-    }
-    if (curveType === 'Catmull Rom') {
-      this.curve = shape.curveCatmullRom;
-    }
-    if (curveType === 'Linear') {
-      this.curve = shape.curveLinear;
-    }
-    if (curveType === 'Monotone X') {
-      this.curve = shape.curveMonotoneX;
-    }
-    if (curveType === 'Monotone Y') {
-      this.curve = shape.curveMonotoneY;
-    }
-    if (curveType === 'Natural') {
-      this.curve = shape.curveNatural;
-    }
-    if (curveType === 'Step') {
-      this.curve = shape.curveStep;
-    }
-    if (curveType === 'Step After') {
-      this.curve = shape.curveStepAfter;
-    }
-    if (curveType === 'Step Before') {
-      this.curve = shape.curveStepBefore;
-    }
-  }
   /** 
    * Method called when the user clicks with the right button
    * @param event MouseEvent, it contains the coordinates 
@@ -179,13 +117,13 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   }
 
   /**
-  * Handle primary mouse click on a graph element.
-  * If Ctrl is pressed, select this node and add it to the selectedNodes list
-  * If the graph element is an edge or a Node/ClusterNode label open the rename Menu
-  * If Ctrl is not pressed and target is a Node, open the details of that node (if it's a event/commit node)
-  * @param event 
-  * @param node 
-  */
+   * Handle primary mouse click on a graph element.
+   * If Ctrl is pressed, select this node and add it to the selectedNodes list
+   * If the graph element is an edge or a Node/ClusterNode label open the rename Menu
+   * If Ctrl is not pressed and target is a Node, open the details of that node (if it's a event/commit node)
+   * @param event 
+   * @param node 
+   */
   handleLeftClick(event: any, element: Node | ClusterNode | Edge) {
     const elementUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
     if ((elementUnderPointer !== null
@@ -207,6 +145,14 @@ export class MindmapComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Download the mind map svg as png
+   */
+  getMindMapAsPng() {
+    var mySVG = document.getElementsByClassName('ngx-charts')[0]
+    saveAsPng.saveSvgAsPng(mySVG, "mind-map.png");
+  }
+
+  /**
    * Selecting and De-selecting nodes using Ctrl+click
    * @param event 
    * @param element 
@@ -217,22 +163,29 @@ export class MindmapComponent implements OnInit, AfterViewInit {
       if (element.data.stroke === "black") {
         var index = this.mindMapService.selectedNodes.findIndex(x => x.id === element.id);
         this.mindMapService.selectedNodes.splice(index, 1);
+
         element.data.stroke = "none";
-        console.log(this.mindMapService.selectedNodes);
+
+        this.mindMapService.links.map(edge => {
+          if (edge.source === element.id) {
+            edge.data ? edge.data.class = "" : edge.data = { class: "" };
+          }
+        }
+        );
+
       } else {
         this.mindMapService.selectedNodes.push(element);
         element.data.stroke = "black";
+
+        this.mindMapService.links.map(edge => {
+          if (edge.source === element.id) {
+            edge.data ? edge.data.class = "highlighted" : edge.data = { class: "highlighted" };
+          }
+        }
+        );
       }
     }
-  }
-
-  /**
-   * Delete the current Mind Map contents and start new
-   */
-  clearMindMap() {
-    this.mindMapService.nodes = [];
-    this.mindMapService.links = [];
-    this.mindMapService.clusters = [];
+    this.graphEl.update();
   }
 
   /**
@@ -376,6 +329,7 @@ export class MindmapComponent implements OnInit, AfterViewInit {
     fileReader.onload = () => {
       try {
         var mMap: MindMap = JSON.parse(fileReader.result as string);
+        console.log(mMap);
         this.mindMapService.loadMindMap(mMap);
       } catch (SyntaxError) {
         alert("Couldn't load MindMap config");
@@ -383,6 +337,13 @@ export class MindmapComponent implements OnInit, AfterViewInit {
     }
     fileReader.onerror = (error) => {
       console.log(error);
+    }
+  }
+
+  getLinkStyle() {
+    return {
+      "fill": "var(--text-color)",
+      "font-size": "inherit"
     }
   }
 }
