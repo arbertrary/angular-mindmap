@@ -1,36 +1,57 @@
 /* You can add global styles to this file, and also import other style files */
 /* You can add global styles to this file, and also import other style files */
 /* Application-wide Styles */
+body.light-theme {
+    --text-color: #222;
+    --bkg-color: #fff;
+    --btn-txt-color: rgb(46, 43, 43);
+    --inp-txt-color: rgb(46, 43, 43);
+    --btn-bg-color: #69F0AE;
+
+    // --btn-bg-color: rgb(11, 88, 160);
+}
+
+body {
+    --text-color: #eee;
+    --bkg-color: #252222;
+    --inp-txt-color: white;
+
+    --btn-txt-color: rgb(46, 43, 43);
+    --btn-bg-color: #69F0AE;
+}
+
 h1 {
     color: #369;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 250%;
+    // font-family: Arial, Helvetica, sans-serif;
+    // font-size: 250%;
 }
 
 h2,
 h3 {
-    color: #444;
-    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text-color);
+    // font-family: Arial, Helvetica, sans-serif;
     font-weight: lighter;
 }
 
 body {
-    margin: 2em;
+    padding-top: 2em;
+    background: var(--bkg-color);
+
 }
 
 body,
 input[type="text"],
 button {
-    color: #333;
+    color: var(--inp-txt-color);
     font-family: Cambria, Georgia, serif;
 }
 
 button {
-    background-color: #eee;
+    // background-color: var(--btn-bg-color);
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    color: black;
+    color: var(--btn-txt-color);
     font-size: 1.1rem;
     padding: 0.5rem;
     margin-right: 1rem;
