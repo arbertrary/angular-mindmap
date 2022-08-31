@@ -1,0 +1,16 @@
+#navBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 8px 16px;
+}
+
+mat-panel-title {
+    font-size: initial;
+}

@@ -1,5 +1,11 @@
 <!-- https://fonts.google.com/icons -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-<h1>Angular Mind Map</h1>
+<mat-toolbar id="navBar" color="accent">
+    <h1>Angular Mind Map</h1>
+    <mat-slide-toggle color="primary" (click)="toggleLightTheme()">
+        <span class="material-icons">{{lightDarkToggleIcon}}</span>
+    </mat-slide-toggle>
+</mat-toolbar>
+
 <app-mindmap></app-mindmap>

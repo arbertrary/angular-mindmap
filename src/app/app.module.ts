@@ -18,6 +18,24 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatCheckboxModule } from "@angular/material/checkbox"
 import { ColorPickerModule } from 'ngx-color-picker';
 
+import { MatListModule } from '@angular/material/list';
+
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatExpansionModule } from '@angular/material/expansion';
+
+const matImports = [
+  MatCheckboxModule,
+  MatDialogModule,
+  MatExpansionModule,
+  MatMenuModule,
+  MatInputModule,
+  MatListModule,
+  MatSelectModule,
+  MatSidenavModule,
+  MatToolbarModule,
+  MatSlideToggleModule,
+]
 
 @NgModule({
   declarations: [
@@ -29,15 +47,9 @@ import { ColorPickerModule } from 'ngx-color-picker';
     AppRoutingModule,
     ColorPickerModule,
     FormsModule,
-    MatCheckboxModule,
-    MatDialogModule,
-    MatMenuModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSidenavModule,
     BrowserAnimationsModule,
     NgxGraphModule
-  ],
+  ].concat(matImports),
   providers: [],
   bootstrap: [AppComponent]
 })
