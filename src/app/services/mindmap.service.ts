@@ -1,23 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Layout, Edge, Node, ClusterNode } from '@swimlane/ngx-graph';
-import { demoClusters, demoLinks, demoNodes } from 'src/assets/demo-mind-map';
 
-import { MindMap, MindMapNote } from 'src';
+import { ClusterNode, Edge, Node } from '@swimlane/ngx-graph';
 import * as shape from 'd3-shape';
 
 
+import { MindMap, MindMapNote } from 'src';
 
+/**
+ * The accompanying service to the mindmap component. Handles all the functionality and settings of the generated ngx-graph
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class MindmapService {
-  // links: Edge[] = links;
-  // nodes: Node[] = nodes;
-  // clusters: ClusterNode[] = clusters;
-  links: Edge[] = demoLinks;
-  nodes: Node[] = demoNodes;
-  clusters: ClusterNode[] = demoClusters;
+  links: Edge[] = [];
+  nodes: Node[] = [];
+  clusters: ClusterNode[] = [];
   mindMapNotes: MindMapNote[] = [];
   /**
    * Nodes that have been selected using Ctrl+Left Click
@@ -64,7 +63,7 @@ export class MindmapService {
   };
   /**
    * The MindMapService constructor. CUrrently sets the dimensions of all nodes to the hardcoded width and height
-   * @param eventService 
+   * @param vizStatesService 
    */
   constructor(private router: Router) { }
 
@@ -145,14 +144,16 @@ export class MindmapService {
     }
     return mMap;
   }
+
   /**
-* Delete the current Mind Map contents and start new
-*/
+   * Delete the current Mind Map contents and start new
+   */
   clearMindMap() {
     this.nodes = [];
     this.links = [];
     this.clusters = [];
   }
+
   /**
    * Check if given node is in any cluster currently
    * @param node 
@@ -227,14 +228,25 @@ export class MindmapService {
     var id = element.id;
     if (this.isNode(element) && all) {
       if (this.selectedNodes.length === 0) {
-        alert("There are no nodes selected.");
+        alert("There are no nodes selected")
+        // Swal.fire({
+        //   icon: "error",
+        //   title: "Error",
+        //   text: "There are no nodes selected."
+        // })
+
       }
       for (let node of this.selectedNodes) {
         var index = this.nodes.findIndex(x => x.id === node.id);
         this.nodes.splice(index, 1);
         this.links = this.links.filter(edge => !(edge.target === node.id || edge.source === node.id));
       }
+      // Clear selected nodes and un-highlight all links
       this.selectedNodes = [];
+      this.links.map(edge => {
+        edge.data ? edge.data.class = "" : edge.data = { class: "" };
+      });
+
     }
     else if (this.isNode(element)) {
       var index = this.nodes.findIndex(x => x.id === id);
@@ -274,12 +286,25 @@ export class MindmapService {
    */
   createCluster(cluster?: ClusterNode) {
     if (cluster && this.selectedNodes.length > 0) {
-      // TODO: Can't yet assign a node that's already in a cluster to a different cluster
+
       this.selectedNodes.forEach((n) => {
+        // If node is already in a cluster remove it from there
+        for (let c of this.clusters) {
+          if (c.childNodeIds?.includes(n.id)) {
+            c.childNodeIds = c.childNodeIds.filter(cnid => cnid !== n.id);
+          }
+        }
+
         cluster.childNodeIds?.push(n.id);
         n.data.stroke = "none";
       });
+
+      // Clear selected nodes and un-highlight all links
       this.selectedNodes = [];
+      this.links.map(edge => {
+        edge.data ? edge.data.class = "" : edge.data = { class: "" };
+      });
+
       this.clusters = [...this.clusters];
     }
     else if (this.selectedNodes.length > 0) {
@@ -287,11 +312,22 @@ export class MindmapService {
       var childNodes: string[] = [];
 
       this.selectedNodes.forEach((n) => {
+        // If node is already in a cluster remove it from there
+        for (let c of this.clusters) {
+          if (c.childNodeIds?.includes(n.id)) {
+            c.childNodeIds = c.childNodeIds.filter(cnid => cnid !== n.id);
+          }
+        }
+
         childNodes.push(n.id);
         n.data.stroke = "none";
       });
 
+      // Clear selected nodes and un-highlight all links
       this.selectedNodes = [];
+      this.links.map(edge => {
+        edge.data ? edge.data.class = "" : edge.data = { class: "" };
+      });
 
       const newCluster: ClusterNode = {
         id: id,
@@ -301,11 +337,16 @@ export class MindmapService {
           customColor: this.nodeColor
         }
       }
-
       this.clusters.push(newCluster);
-      this.clusters = [...this.clusters]
+      this.clusters = [...this.clusters];
     } else {
-      alert("There are no nodes selected.");
+      alert("There are no nodes selected");
+      // Swal.fire({
+      //   icon: "error",
+      //   title: "Error",
+      //   text: "There are no nodes selected."
+      // })
+
     }
   }
 

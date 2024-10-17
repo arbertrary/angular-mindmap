@@ -16,6 +16,18 @@ mat-checkbox {
     width: 100%;
 }
 
+::ng-deep .mat-mdc-menu-content {
+    padding-left: 10px !important;
+}
+
+.node {
+    cursor: grab;
+}
+
+.cluster {
+    cursor: default;
+}
+
 .mindMap {
     width: 100%;
     height: 100vh;
@@ -28,12 +40,16 @@ mat-checkbox {
     stroke-dasharray: 4;
 }
 
+.drag-circle {
+    cursor: pointer;
+}
+
 .edge {
     cursor: pointer;
 }
 
 .line.highlighted {
-    // stroke-width: 6px;
+    stroke-width: 6px;
     stroke: var(--text-color);
     stroke-dasharray: 4;
 

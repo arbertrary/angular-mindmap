@@ -1,18 +1,28 @@
-import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { MatMenuTrigger } from "@angular/material/menu";
+import { ClusterNode, Edge, GraphComponent, Node, NodePosition } from '@swimlane/ngx-graph';
+import { Subject } from 'rxjs';
+
+import { MindMap } from 'src';
 
 import { MindmapService, NodeHierarchy } from '../services/mindmap.service';
 
-import { GraphComponent, NgxGraphModule, NodePosition } from '@swimlane/ngx-graph';
-
-import { Layout, Edge, Node, ClusterNode } from '@swimlane/ngx-graph';
-
-import { MatMenuTrigger } from "@angular/material/menu";
-import { Subject } from 'rxjs';
-
-import { MindMap } from "src";
-
+/**
+ * This library is archived and there have been no commits for a few years. Might cause issues in the long run
+ * typings: https://github.com/ksholla20/save-svg-as-png-typings
+ * https://github.com/exupero/saveSvgAsPng
+ */
 import * as saveAsPng from "save-svg-as-png";
 
+
+/** 
+ * A mind-map implementation using ngx-graph.
+ * See this github repository for this mind-map as separate project: https://github.com/arbertrary/angular-mindmap
+ * 
+ * https://marco.dev/angular-right-click-menu
+ * Line drag and drop
+ * https://stackblitz.com/edit/ngx-graph-demo-23yiqf?file=src%2Fapp%2Fapp.component.html
+ */
 @Component({
   selector: 'app-mindmap',
   templateUrl: './mindmap.component.html',
@@ -32,36 +42,15 @@ export class MindmapComponent implements OnInit {
   @ViewChild("edgeMenuTrigger", { read: MatMenuTrigger, static: false }) edgeMenu!: MatMenuTrigger;
   @ViewChild("clusterMenuTrigger", { read: MatMenuTrigger, static: false }) clusterMenu!: MatMenuTrigger;
 
-
   @ViewChild('graph', { static: false }) graphEl!: GraphComponent;
 
-  // links: Edge[] = links;
-  // nodes: Node[] = nodes;
-  // clusters: ClusterNode[] = clusters;
-
-  // selectedNodes: Node[] = [];
-  // draggingEnabled: boolean = false;
-  // panningEnabled: boolean = true;
   zoomEnabled: boolean = true;
 
-  // zoomSpeed: number = 0.1;
-  // minZoomLevel: number = 0.1;
-  // maxZoomLevel: number = 4.0;
-  // panOnZoom: boolean = true;
-
-  // autoZoom: boolean = false;
-  // autoCenter: boolean = false;
   center$: Subject<boolean> = new Subject();
 
   toggleColorPicker: boolean = false;
 
-  // https://marco.dev/angular-right-click-menu
-  // Maybe use ngx-graph and create custom node and link functionality, custom context menu etc
-  // https://material.angular.io/components/menu/overview
-  // Line drag and drop
-  // https://stackblitz.com/edit/ngx-graph-demo-23yiqf?file=src%2Fapp%2Fapp.component.html
-
-  isDragging: boolean = false;
+  isDraggingALink: boolean = false;
   draggingNode: Node | undefined;
   currentDragPosition!: NodePosition;
   startingDragPosition!: NodePosition;
@@ -76,6 +65,16 @@ export class MindmapComponent implements OnInit {
   ngOnInit(): void {
     this.mindMapService.setInterpolationType(this.mindMapService.curveType);
   }
+
+  // ngOnDestroy(): void {
+  //   if (this.globalService.globalConnected) {
+  //     this.gitService.addCommit(this.globalService.globalConnection.repoId, this.mindMapService.getMindMap())
+  //       .subscribe(
+  //         response => {
+  //           console.log(response.action);
+  //         });
+  //   }
+  // }
 
   setOrientationType(oType: string) {
     this.mindMapService.setOrientation(oType);
@@ -95,7 +94,10 @@ export class MindmapComponent implements OnInit {
     // we record the mouse position in our object 
     this.menuTopLeftPosition.x = event.clientX + 'px';
     this.menuTopLeftPosition.y = event.clientY + 'px';
+    // this.menuTopLeftPosition.x = event.screenX + 'px';
+    // this.menuTopLeftPosition.y = event.screenY + 'px';
 
+    // console.log(this.menuTopLeftPosition);
     // this.menuTopLeftPosition.x = (event.clientX - this.graphEl.panOffsetX) / this.graphEl.zoomLevel + "px";
     // this.menuTopLeftPosition.y = (event.clientY - this.graphEl.panOffsetY) / this.graphEl.zoomLevel + "px";
 
@@ -112,15 +114,13 @@ export class MindmapComponent implements OnInit {
     } else if (this.mindMapService.isCluster(element)) {
       this.clusterMenu.menuData = { cluster: element };
       this.clusterMenu.openMenu()
-
     }
+    this.openContextMenuAtMousePosition();
   }
 
   /**
-   * Handle primary mouse click on a graph element.
-   * If Ctrl is pressed, select this node and add it to the selectedNodes list
+   * Handle primary mouse click on a graph element. Only used for the rename label menu.
    * If the graph element is an edge or a Node/ClusterNode label open the rename Menu
-   * If Ctrl is not pressed and target is a Node, open the details of that node (if it's a event/commit node)
    * @param event 
    * @param node 
    */
@@ -130,17 +130,16 @@ export class MindmapComponent implements OnInit {
       && (this.mindMapService.isCluster(element)
         || this.mindMapService.isNode(element)))
       || this.mindMapService.isEdge(element)) {
+      event.preventDefault();
 
+      // we record the mouse position in our object 
+      this.menuTopLeftPosition.x = event.clientX + 'px';
+      this.menuTopLeftPosition.y = event.clientY + 'px';
       // Give the current element to the labelMenu to handle
       this.labelMenu.menuData = { item: element };
       this.labelMenu.openMenu();
-    } else if (this.mindMapService.isNode(element)) {
-      // TODO: Unfortunately when dragging is enabled, dragging triggers opening the details. This is unwanted
-      // this.mindMapService.openDetails(element);
-      // console.log("open details");
-      // TODO: open details
-    } else {
-      console.log("uhm");
+
+      this.openContextMenuAtMousePosition();
     }
   }
 
@@ -176,6 +175,7 @@ export class MindmapComponent implements OnInit {
       } else {
         this.mindMapService.selectedNodes.push(element);
         element.data.stroke = "black";
+        element.data.strokeWidth = "4";
 
         this.mindMapService.links.map(edge => {
           if (edge.source === element.id) {
@@ -220,7 +220,11 @@ export class MindmapComponent implements OnInit {
     if (event.button != 0) {
       return;
     }
-    this.isDragging = true;
+
+    this.menuTopLeftPosition.x = event.clientX + 'px';
+    this.menuTopLeftPosition.y = event.clientY + 'px';
+
+    this.isDraggingALink = true;
     this.draggingNode = node;
     this.draggingEnabled = false;
 
@@ -250,7 +254,7 @@ export class MindmapComponent implements OnInit {
    */
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
-    if (!this.isDragging) {
+    if (!this.isDraggingALink) {
       return;
     }
     this.currentDragPosition.x += event.movementX / this.graphEl.zoomLevel;
@@ -267,7 +271,7 @@ export class MindmapComponent implements OnInit {
    */
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent): void {
-    if (this.isDragging && this.draggingNode) {
+    if (this.isDraggingALink && this.draggingNode) {
       this.draggingEnabled = true;
 
       // logic if mouse is released over another node
@@ -285,32 +289,129 @@ export class MindmapComponent implements OnInit {
           id: this.draggingNode.id + Math.random().toString().substring(2, 8),
           source: this.draggingNode.id,
           target: targetId,
-          label: ""
+          label: "edge"
         }
         this.labelMenu.menuData = { item: link };
 
         this.labelMenu.openMenu();
+        this.openContextMenuAtMousePosition();
+
         this.mindMapService.links.push(link);
         this.mindMapService.links = [...this.mindMapService.links];
       }
     }
-    this.isDragging = false;
+    this.isDraggingALink = false;
     this.draggingNode = undefined;
   }
 
-  /**
-   * // TODO: currently not used
-   * Problem: The dragged node is sometimes on top of the other one and then elementFromPoint returns the same element that has been dragged
-   * @param event 
-   */
-  onNodeMouseUp(event: MouseEvent, node: Node): void {
-    console.log("Dropped node");
-    console.log(JSON.stringify(node));
-
-    const el = document.elementFromPoint(event.clientX, event.clientY);
-    console.log(el);
+  onNodeMouseDown() {
+    this.isDraggingALink = false;
   }
 
+  /**
+   * Move a dragged node onto/into a (different) cluster
+   * Check if the dragged node is over a cluster (identified by checking the HTML elements' ids)
+   * Get the cluster id from the <svg:rect that is the cluster rectangle.
+   * Check if the dragged node is already in a cluster. If so, remove it from there
+   * 
+   * Then add the node to the cluster that is under the mouse
+   *
+   * @param {MouseEvent} event
+   * @param {Node} node
+   */
+  onNodeMouseUp(event: MouseEvent, node: Node): void {
+    if (event.button != 0) {
+      return;
+    }
+    if (this.isDraggingALink) {
+      return;
+    }
+
+
+    // Get the list of HTML Elements under the mouse cursor
+    const els = document.elementsFromPoint(event.clientX, event.clientY);
+
+    // Check if there's a cluster rectangle under the cursor
+    var clusterEl = els.find(el =>
+      el.id.startsWith("cluster-")
+    );
+    var nodeEl = els.find(el =>
+      el.id.startsWith("node-el-") && el.id.replace("node-el-", "") !== node.id
+    );
+
+    if (clusterEl) {
+      // If there's a cluster rectangle check if the dropped node is already in a different cluster
+      // If yes, remove it from there
+      console.log(clusterEl.id);
+      const clusterId = clusterEl.id.replace("cluster-rect-", "");
+      const cluster = this.mindMapService.clusters.find(c => c.id === clusterId);
+
+      for (let c of this.mindMapService.clusters) {
+        if (c.childNodeIds?.includes(node.id) && c.id !== clusterId) {
+          c.childNodeIds = c.childNodeIds.filter(cnid => cnid !== node.id);
+        } else if (c.childNodeIds?.includes(node.id) && c.id === clusterId) {
+          console.log("node is already in this cluster. return");
+          return;
+        }
+      }
+
+      // Add the dropped node to the new cluster
+      cluster?.childNodeIds?.push(node.id);
+
+      // Update the graph
+      this.mindMapService.clusters = [...this.mindMapService.clusters];
+      this.graphEl.update()
+    } else if (nodeEl) {
+
+      // If there's no cluster under the cursor 
+      // Check if there's a node element (rect or circle) under the cursor 
+      // that is NOT the dropped node
+      // if yes, get the node id
+      const sndNodeId = nodeEl.id.replace("node-el-", "");
+
+      // if the dropped node was in a different cluster before, remove it from that cluster
+      for (let c of this.mindMapService.clusters) {
+        if (c.childNodeIds?.includes(node.id)) {
+          c.childNodeIds = c.childNodeIds.filter(cnid => cnid !== node.id);
+        }
+      }
+
+      // Create a new cluster from the two nodes that have been dropped onto another
+      const id = Math.random().toString(36).replace(/[^a-z]+/g, '').substring(0, 3);
+      var childNodes: string[] = [];
+      childNodes.push(node.id);
+      childNodes.push(sndNodeId);
+      const newCluster: ClusterNode = {
+        id: id,
+        label: 'Cluster ' + id,
+        childNodeIds: childNodes,
+        data: {
+          customColor: this.mindMapService.nodeColor
+        }
+
+      }
+
+      // Push the new cluster and update the graph 
+      this.mindMapService.clusters.push(newCluster);
+      this.mindMapService.clusters = [...this.mindMapService.clusters];
+      this.graphEl.update();
+    } else {
+      for (let c of this.mindMapService.clusters) {
+        if (c.childNodeIds?.includes(node.id)) {
+          c.childNodeIds = c.childNodeIds.filter(cnid => cnid !== node.id);
+        }
+      }
+      this.mindMapService.clusters = [...this.mindMapService.clusters];
+      this.graphEl.update();
+
+    }
+
+
+  }
+
+  /**
+   * Save the mind map as JSON file
+   */
   downloadMindMap() {
     var mindMap = JSON.stringify(this.mindMapService.getMindMap(), null, 2);
     var element = document.createElement('a');
@@ -332,7 +433,8 @@ export class MindmapComponent implements OnInit {
         console.log(mMap);
         this.mindMapService.loadMindMap(mMap);
       } catch (SyntaxError) {
-        alert("Couldn't load MindMap config");
+        alert("Couldn't load MindMap config")
+
       }
     }
     fileReader.onerror = (error) => {
@@ -340,11 +442,35 @@ export class MindmapComponent implements OnInit {
     }
   }
 
+  /**
+   * Position the specific mat-menu context menu element at the previously set cursor position.
+   * 
+   */
+  // CAUTION: Be prepared to have to fix this at some point. This does seem like a very hacky solution!
+  openContextMenuAtMousePosition() {
+    setTimeout(() => {
+      const menuCollection = document.getElementsByClassName("cdk-overlay-connected-position-bounding-box") as HTMLCollectionOf<HTMLElement>;
+      const menu: HTMLElement = menuCollection[0];
+      menu.style.position = "absolute";
+      menu.style.left = this.menuTopLeftPosition.x;
+      menu.style.top = this.menuTopLeftPosition.y;
+
+      // console.log(menu);
+
+    }, 0);
+  }
+
+
   getLinkStyle() {
     return {
       "fill": "var(--text-color)",
       "font-size": "inherit"
     }
+  }
+  styleVizStateNodeCircle(node: Node) {
+    var styleString = (node.dimension!.width / 2).toString() + "px" + " " + (node.dimension!.height / 2).toString() + "px"
+    const styles = { "translate": styleString }
+    return styles;
   }
 }
 
