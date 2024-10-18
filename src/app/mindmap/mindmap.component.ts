@@ -147,7 +147,7 @@ export class MindmapComponent implements OnInit {
    * Download the mind map svg as png
    */
   getMindMapAsPng() {
-    var mySVG = document.getElementsByClassName('ngx-charts')[0]
+    var mySVG = document.getElementsByClassName('ngx-graph')[0]
     saveAsPng.saveSvgAsPng(mySVG, "mind-map.png");
   }
 
